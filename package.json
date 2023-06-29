@@ -1,0 +1,18 @@
+{
+  "name": "variables-to-css-custom-properties",
+  "version": "1.0.0",
+  "description": "Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables",
+  "main": "dist/plugin/index.js",
+  "scripts": {
+    "build": "shx rm -rf dist && shx mkdir dist && shx cp -R ./src/ui/ ./dist/ && tsc -p tsconfig.json",
+    "build:watch": "chokidar \"src\" -c \"npm run build\""
+  },
+  "author": "Laurent Thiebault",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.69.0",
+    "chokidar-cli": "^3.0.0",
+    "shx": "^0.3.4",
+    "typescript": "^5.1.6"
+  }
+}

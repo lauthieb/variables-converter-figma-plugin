@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variables Converterr</title>
+    <style>
+      body {
+        background-color: #111;
+      }
+
+      h1 {
+        font-family: sans-serif;
+        font-size: 20px;
+        color: white;
+      }
+
+      h2 {
+        font-family: sans-serif;
+        font-size: 13px;
+        margin: 0;
+        color: white;
+      }
+
+      pre#vanilla-css, pre#vanilla-js {
+        display: block;
+        width: auto;
+        overflow: auto;
+        background-color: #eee;
+        border-radius: 4px;
+        scrollbar-color: #ccc transparent;
+        word-wrap: normal;
+        padding: 0 20px;
+        max-height: 35vh;
+      }
+
+      pre#shiki-css, pre#shiki-js {
+        margin: 0;
+      }
+
+      pre#shiki-css code pre, pre#shiki-js code pre {
+        margin: 0;
+        padding: 8px;
+        border-radius: 4px;
+        display: block;
+        width: auto;
+        overflow: auto;
+        scrollbar-color: red;
+        max-height: 35vh;
+      }
+
+      button {
+        height: 22px;
+        font-family: sans-serif;
+        font-size: 11px;
+        border-radius: 4px;
+        border: 1px solid lightgray;
+        background-color: white;
+      }
+
+      button:hover, button:active {
+        cursor: pointer;
+        background-color: #303030;
+        color: white;
+      }
+
+      pre#vanilla-css > code, pre#vanilla-js > code {
+        display: block;
+        font-size: 12px;
+        text-indent: 0;
+        color: #111;
+        white-space: inherit;
+      }
+
+      .box-center {
+        display: flex; 
+        flex-direction: row; 
+        justify-content: space-between; 
+        align-items: center;
+      }
+    </style>
+    <script src="https://unpkg.com/shiki"></script>
+    <script>
+      let cssCode;
+      let jsCode;
+
+      onmessage = (event) => {
+        if (shiki) {
+          shiki
+          .getHighlighter({
+            theme: 'nord',
+            langs: ['css'],
+          })
+          .then(highlighter => {
+            cssCode = event.data.pluginMessage.cssFile;
+            const code = highlighter.codeToHtml(cssCode, { lang: 'css' })
+            document.getElementById('css-file-shiki').innerHTML = code;
+          });
+
+          shiki
+          .getHighlighter({
+            theme: 'nord',
+            langs: ['js'],
+          })
+          .then(highlighter => {
+            jsCode = event.data.pluginMessage.jsFile;
+            const code = highlighter.codeToHtml(jsCode, { lang: 'js' })
+            document.getElementById('js-file—shiki').innerHTML = code;
+          })
+
+          document.getElementById('vanilla-css').style.display = "none";
+          document.getElementById('vanilla-js').style.display = "none";
+          document.getElementById('vanilla-css-btn').style.display = "none";
+          document.getElementById('vanilla-js-btn').style.display = "none";
+        } else {
+          document.getElementById('css-file-vanilla').innerHTML = event.data.pluginMessage.cssFile;
+          document.getElementById('js-file-vanilla').innerHTML = event.data.pluginMessage.jsFile;
+          document.getElementById('shiki-css').style.display = "none";
+          document.getElementById('shiki-js').style.display = "none";
+          document.getElementById('shiki-css-btn').style.display = "none";
+          document.getElementById('shiki-js-btn').style.display = "none";
+        }
+      }
+
+      function copyCodeToClipboard(file) {
+        let code;
+        if (file === 'js-file-shiki'|| file === 'js-file-vanilla') {
+          code = jsCode;
+        } else {
+          code = cssCode;
+        }
+
+        const tempTextarea = document.createElement("textarea");
+        tempTextarea.value = code;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempTextarea);
+
+        if (file === 'js-file-shiki'|| file === 'js-file-vanilla') {
+          parent.postMessage({ eventName: 'code-copied-js', pluginMessage: {type:'code-copied-js'}}, '*');
+        } else {
+          parent.postMessage({ eventName: 'code-copied-css', pluginMessage: {type:'code-copied-css'}}, '*');
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Variables Converter</h1>
+
+    <div class="box-center">
+      <h2>→ CSS Custom Properties</h2>
+
+      <button id="shiki-css-btn" onclick="copyCodeToClipboard(('css-file-shiki'))">Copy to Clipboard</button>
+      <button id="vanilla-css-btn" onclick="copyCodeToClipboard(('css-file-vanilla'))">Copy to Clipboard</button>
+    </div>
+
+    <pre id="shiki-css">
+      <code id="css-file-shiki"></code>
+    </pre>
+
+    <pre id="vanilla-css">
+      <code id="css-file-vanilla"></code>
+    </pre>
+
+    <div class="box-center">
+      <h2>→ JavaScript variables</h2>
+
+      <button id="shiki-js-btn" onclick="copyCodeToClipboard(('js-file-shiki'))">Copy to Clipboard</button>
+      <button id="vanilla-js-btn" onclick="copyCode(('js-file-vanilla'))">Copy to Clipboard</button>
+    </div>
+
+    <pre id="shiki-js">
+      <code id="js-file—shiki"></code>
+    </pre>
+
+    <pre id="vanilla-js">
+      <code id="js-file-vanilla"></code>
+    </pre>
+  </body>
+</html>
+  
