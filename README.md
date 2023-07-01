@@ -1,6 +1,6 @@
 # variables-converter-figma-plugin
 
-> Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables
+![](./resources/images/variables-converter-cover-art.png)
 
 ## Install
 
