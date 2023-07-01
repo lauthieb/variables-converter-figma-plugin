@@ -1,6 +1,10 @@
 # variables-converter-figma-plugin
 
-![](./resources/images/variables-converter-cover-art.png)
+[![Variables converter thumbnail that shows its UI](./resources/images/variables-converter-cover-art.png)](https://www.figma.com/community/plugin/1256000104406722117/Variables-Converter)
+
+## Try it!
+
+To try this plugin in production, just [go to its Figma Community page](https://www.figma.com/community/plugin/1256000104406722117/Variables-Converter), install it & enjoy!
 
 ## Install
 
