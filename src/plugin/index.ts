@@ -122,6 +122,7 @@ const figmaVariables = figma.variables.getLocalVariables();
 /* Iterates through variables to generate CSS & JS variables */
 figmaVariables
   .filter(variable => variable.resolvedType === 'COLOR' || variable.resolvedType === 'FLOAT')
+  .sort((a, b) => a.name.localeCompare(b.name))
   .map(variable => `  ${generatesCSSKeyString(variable)}: ${generatesCSSValueString(variable)};`)
   .forEach(property => {
     cssFile += property + '\n';
