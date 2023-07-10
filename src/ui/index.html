@@ -6,13 +6,7 @@
     <title>Variables Converterr</title>
     <style>
       body {
-        background-color: #111;
-      }
-
-      h1 {
-        font-family: sans-serif;
-        font-size: 20px;
-        color: white;
+        background-color: #222;
       }
 
       h2 {
@@ -22,23 +16,11 @@
         color: white;
       }
 
-      pre#vanilla-css, pre#vanilla-js {
-        display: block;
-        width: auto;
-        overflow: auto;
-        background-color: #eee;
-        border-radius: 4px;
-        scrollbar-color: #ccc transparent;
-        word-wrap: normal;
-        padding: 0 20px;
-        max-height: 35vh;
-      }
-
-      pre#shiki-css, pre#shiki-js {
+      pre {
         margin: 0;
       }
 
-      pre#shiki-css code pre, pre#shiki-js code pre {
+      pre code pre {
         margin: 0;
         padding: 8px;
         border-radius: 4px;
@@ -46,7 +28,7 @@
         width: auto;
         overflow: auto;
         scrollbar-color: red;
-        max-height: 35vh;
+        max-height: 24vh;
       }
 
       button {
@@ -54,80 +36,89 @@
         font-family: sans-serif;
         font-size: 11px;
         border-radius: 4px;
+        background-color: #303030;
+        color: white;
         border: 1px solid lightgray;
-        background-color: white;
       }
 
       button:hover, button:active {
         cursor: pointer;
-        background-color: #303030;
-        color: white;
+        color: black;
+        background: white;
       }
 
-      pre#vanilla-css > code, pre#vanilla-js > code {
-        display: block;
-        font-size: 12px;
-        text-indent: 0;
-        color: #111;
-        white-space: inherit;
+      .box-flex-center {
+        display: flex;
+        flex-direction: row;
+        justify-content: center; 
+        align-items: flex-end;
       }
 
-      .box-center {
+      .box-flex-center h2 {
+        margin-left: 4px;
+      }
+
+      .box-space-between {
         display: flex; 
         flex-direction: row; 
         justify-content: space-between; 
-        align-items: center;
+        align-items: flex-end;
       }
     </style>
     <script src="https://unpkg.com/shiki"></script>
     <script>
       let cssCode;
       let jsCode;
+      let composeCode;
 
       onmessage = (event) => {
-        if (shiki) {
-          shiki
-          .getHighlighter({
-            theme: 'nord',
-            langs: ['css'],
-          })
-          .then(highlighter => {
-            cssCode = event.data.pluginMessage.cssFile;
-            const code = highlighter.codeToHtml(cssCode, { lang: 'css' })
-            document.getElementById('css-file-shiki').innerHTML = code;
-          });
+        shiki
+        .getHighlighter({
+          theme: 'nord',
+          langs: ['css'],
+        })
+        .then(highlighter => {
+          cssCode = event.data.pluginMessage.cssFile;
+          const code = highlighter.codeToHtml(cssCode, { lang: 'css' })
+          document.getElementById('css-file').innerHTML = code;
+        });
 
-          shiki
-          .getHighlighter({
-            theme: 'nord',
-            langs: ['js'],
-          })
-          .then(highlighter => {
-            jsCode = event.data.pluginMessage.jsFile;
-            const code = highlighter.codeToHtml(jsCode, { lang: 'js' })
-            document.getElementById('js-file—shiki').innerHTML = code;
-          })
+        shiki
+        .getHighlighter({
+          theme: 'nord',
+          langs: ['js'],
+        })
+        .then(highlighter => {
+          jsCode = event.data.pluginMessage.jsFile;
+          const code = highlighter.codeToHtml(jsCode, { lang: 'js' })
+          document.getElementById('js-file').innerHTML = code;
+        });
 
-          document.getElementById('vanilla-css').style.display = "none";
-          document.getElementById('vanilla-js').style.display = "none";
-          document.getElementById('vanilla-css-btn').style.display = "none";
-          document.getElementById('vanilla-js-btn').style.display = "none";
-        } else {
-          document.getElementById('css-file-vanilla').innerHTML = event.data.pluginMessage.cssFile;
-          document.getElementById('js-file-vanilla').innerHTML = event.data.pluginMessage.jsFile;
-          document.getElementById('shiki-css').style.display = "none";
-          document.getElementById('shiki-js').style.display = "none";
-          document.getElementById('shiki-css-btn').style.display = "none";
-          document.getElementById('shiki-js-btn').style.display = "none";
-        }
+        shiki
+        .getHighlighter({
+          theme: 'nord',
+          langs: ['kotlin'],
+        })
+        .then(highlighter => {
+          composeCode = event.data.pluginMessage.composeFile;
+          const code = highlighter.codeToHtml(composeCode, { lang: 'kotlin' })
+          document.getElementById('compose-file').innerHTML = code;
+        });
       }
 
       function copyCodeToClipboard(file) {
         let code;
-        if (file === 'js-file-shiki'|| file === 'js-file-vanilla') {
-          code = jsCode;
-        } else {
-          code = cssCode;
+
+        switch (file) {
+          case 'js-file':
+            code = jsCode;
+            break;
+          case 'css-file':
+            code = cssCode;
+            break;
+          case 'compose-file':
+            code = composeCode;
+            break;
         }
 
         const tempTextarea = document.createElement("textarea");
@@ -137,45 +128,43 @@
         document.execCommand("copy");
         document.body.removeChild(tempTextarea);
 
-        if (file === 'js-file-shiki'|| file === 'js-file-vanilla') {
-          parent.postMessage({ eventName: 'code-copied-js', pluginMessage: {type:'code-copied-js'}}, '*');
-        } else {
-          parent.postMessage({ eventName: 'code-copied-css', pluginMessage: {type:'code-copied-css'}}, '*');
-        }
+        const event = `code-copied-${file.split('-')[0]}`;
+        parent.postMessage({ eventName: event, pluginMessage: {type:event}}, '*');
       }
     </script>
   </head>
   <body>
-    <h1>Variables Converter</h1>
-
-    <div class="box-center">
-      <h2>→ CSS Custom Properties</h2>
-
-      <button id="shiki-css-btn" onclick="copyCodeToClipboard(('css-file-shiki'))">Copy to Clipboard</button>
-      <button id="vanilla-css-btn" onclick="copyCodeToClipboard(('css-file-vanilla'))">Copy to Clipboard</button>
+    <div class="box-space-between">
+      <div class="box-flex-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 362.734 512"><path d="m437.367 100.62-33.046 370.199L255.778 512l-148.134-41.123L74.633 100.62z" style="fill:#264de4" transform="translate(-74.633)"/><path d="m376.03 447.246 28.24-316.352H256v349.629z" style="fill:#2965f1" transform="translate(-74.633)"/><path d="m150.31 268.217 4.07 45.41H256v-45.41zM256 176.305H142.132l4.128 45.411H256zM256 433.399v-47.246l-.199.053-50.574-13.656-3.233-36.217h-45.585l6.362 71.301 93.02 25.823z" style="fill:#ebebeb" transform="translate(-74.633)"/><path d="M85.367 0h55v23h-32v23h32v23h-55zM151.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32zM217.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32z" fill="white" /><path d="m311.761 313.627-5.271 58.894-50.647 13.67v47.244l93.094-25.801.683-7.672 10.671-119.551 1.108-12.194 8.198-91.912H255.843v45.411h63.988l-4.132 46.501h-59.856v45.41z" style="fill:#fff" transform="translate(-74.633)"/></svg>
+        <h2>CSS variables</h2>
+      </div>
+      <button onclick="copyCodeToClipboard(('css-file'))">Copy to Clipboard</button>
     </div>
-
-    <pre id="shiki-css">
-      <code id="css-file-shiki"></code>
+    <pre>
+      <code id="css-file"></code>
     </pre>
 
-    <pre id="vanilla-css">
-      <code id="css-file-vanilla"></code>
-    </pre>
-
-    <div class="box-center">
-      <h2>→ JavaScript variables</h2>
-
-      <button id="shiki-js-btn" onclick="copyCodeToClipboard(('js-file-shiki'))">Copy to Clipboard</button>
-      <button id="vanilla-js-btn" onclick="copyCode(('js-file-vanilla'))">Copy to Clipboard</button>
+    <div class="box-space-between">
+      <div class="box-flex-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 630 630"><path fill="#f7df1e" d="M0 0h630v630H0z"/><path d="M423.2 492.19c12.69 20.72 29.2 35.95 58.4 35.95 24.53 0 40.2-12.26 40.2-29.2 0-20.3-16.1-27.49-43.1-39.3l-14.8-6.35c-42.72-18.2-71.1-41-71.1-89.2 0-44.4 33.83-78.2 86.7-78.2 37.64 0 64.7 13.1 84.2 47.4l-46.1 29.6c-10.15-18.2-21.1-25.37-38.1-25.37-17.34 0-28.33 11-28.33 25.37 0 17.76 11 24.95 36.4 35.95l14.8 6.34c50.3 21.57 78.7 43.56 78.7 93 0 53.3-41.87 82.5-98.1 82.5-54.98 0-90.5-26.2-107.88-60.54zm-209.13 5.13c9.3 16.5 17.76 30.45 38.1 30.45 19.45 0 31.72-7.61 31.72-37.2v-201.3h59.2v202.1c0 61.3-35.94 89.2-88.4 89.2-47.4 0-74.85-24.53-88.81-54.075z"/></svg>
+        <h2>JavaScript variables</h2>
+      </div>
+      <button onclick="copyCodeToClipboard(('js-file'))">Copy to Clipboard</button>
     </div>
-
-    <pre id="shiki-js">
-      <code id="js-file—shiki"></code>
+    <pre>
+      <code id="js-file"></code>
     </pre>
 
-    <pre id="vanilla-js">
-      <code id="js-file-vanilla"></code>
+    <div class="box-space-between">
+      <div class="box-flex-center">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" viewBox="-147 -70 294 345"><g fill="#a4c639"><use xlink:href="#a" stroke="#FFF" stroke-width="14.4"/><use xlink:href="#b" transform="scale(-1 1)"/><g id="b" stroke="#FFF" stroke-width="7.2"><rect width="13" height="86" x="14" y="-86" rx="6.5" transform="rotate(29)"/><rect id="c" width="48" height="133" x="-143" y="41" rx="24"/><use xlink:href="#c" x="85" y="97"/></g><g id="a"><ellipse cy="41" rx="91" ry="84"/><rect width="182" height="182" x="-91" y="20" rx="22"/></g></g><g fill="#FFF" stroke="#FFF" stroke-width="7.2"><path d="M-95 44.5H95"/><circle cx="-42" r="4"/><circle cx="42" r="4"/></g></svg>
+        <h2>Compose variables</h2>
+      </div>
+      <button onclick="copyCodeToClipboard(('compose-file'))">Copy to Clipboard</button>
+    </div>
+    <pre>
+      <code id="compose-file"></code>
     </pre>
   </body>
 </html>

@@ -1,8 +1,31 @@
 /*
 ** =================
-** Utils - Converters
+** Utils - Maths
 ** =================
 */
+
+/*
+** Converts a rgba color to hex
+*/
+function rgba2hex(orig: any) {
+  let a,
+    rgb = orig.replace(/\s/g, '').match(/^rgba?\((\d+),(\d+),(\d+),?([^,\s)]+)?/i),
+    alpha = (rgb && rgb[4] || "").trim(),
+    hex = rgb ?
+    (rgb[1] | 1 << 8).toString(16).slice(1) +
+    (rgb[2] | 1 << 8).toString(16).slice(1) +
+    (rgb[3] | 1 << 8).toString(16).slice(1) : orig;
+
+  if (alpha !== "") {
+    a = alpha;
+  } else {
+    a = 0o1;
+  }
+  a = ((a * 255) | 1 << 8).toString(16).slice(1)
+  hex = hex + a;
+
+  return '#' + hex.toUpperCase();
+}
 
 /*
 ** Converts a rgba JavaScript object to a CSS hexa string
@@ -11,6 +34,21 @@ function rgbaObjectToCSSHexaString(obj: { r: number, g: number, b: number, a: nu
   const { r, g, b, a } = obj;
   const rgbaString = rgba2hex(`rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`);
   return rgbaString;
+}
+
+/*
+** =================
+** Utils - Converters
+** =================
+*/
+
+/*
+** Converts a rgba JavaScript object to a Compose hexa string
+*/
+function rgbaObjectToComposeHexaString(obj: { r: number, g: number, b: number, a: number }): string {
+  const { r, g, b, a } = obj;
+  const rgbaString = rgba2hex(`rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`);
+  return `Ox${rgbaString.substring(7)}${rgbaString.substring(1, 7)}`
 }
 
 /*
@@ -26,9 +64,9 @@ function cssPropertyToCamelCase(cssProperty: string): string {
 }
 
 /*
-** Converts a CSS property to JavaScript property
+** Converts a CSS property to JavaScript const
 */
-function cssPropertyToJSProperty(propertyString: string): string {
+function cssPropertyToJSConst(propertyString: string): string {
   propertyString = propertyString.trim();
 
   const matches = propertyString.match(/--(.+):\s*(.+);/);
@@ -49,29 +87,6 @@ function cssPropertyToJSProperty(propertyString: string): string {
   const jsConstantString = `export const ${camelCaseName} = ${propertyValue};`;
 
   return jsConstantString;
-}
-
-/*
-** Converts a CSS property to JavaScript property
-*/
-function rgba2hex(orig: any) {
-  let a,
-    rgb = orig.replace(/\s/g, '').match(/^rgba?\((\d+),(\d+),(\d+),?([^,\s)]+)?/i),
-    alpha = (rgb && rgb[4] || "").trim(),
-    hex = rgb ?
-    (rgb[1] | 1 << 8).toString(16).slice(1) +
-    (rgb[2] | 1 << 8).toString(16).slice(1) +
-    (rgb[3] | 1 << 8).toString(16).slice(1) : orig;
-
-  if (alpha !== "") {
-    a = alpha;
-  } else {
-    a = 0o1;
-  }
-  a = ((a * 255) | 1 << 8).toString(16).slice(1)
-  hex = hex + a;
-
-  return '#' + hex.toUpperCase();
 }
 
 /*
@@ -103,6 +118,32 @@ function generatesCSSValueString(variable: Variable): string {
   }
 };
 
+function generatesComposeKeyString(variable: Variable): string {
+  const parts = variable.name.split('/');
+  let transformedString = '';
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim();
+    const capitalizedPart = part.charAt(0).toUpperCase() + part.slice(1);
+    transformedString += capitalizedPart;
+  }
+  
+  return transformedString;
+}
+
+function generatesComposeValueString(variable: Variable): string {
+  const value: any = variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
+
+  if (value.type === 'VARIABLE_ALIAS') {
+    const alias = <Variable> figmaVariables.find(obj => obj.id === value.id);
+    return `Variables.${generatesComposeKeyString(alias)}`;
+  } else if (variable.resolvedType === 'COLOR') {
+    return rgbaObjectToComposeHexaString(value);
+  } else {
+    return value + '.dp';
+  }
+}
+
 /*
 ** =================
 ** Figma plugin
@@ -115,31 +156,45 @@ figma.showUI(__html__);
 /* Prepare variables for code generation */
 let cssFile = `:root {\n`;
 let jsFile = '';
+let composeFile = `object Variables {\n`;
 
 /* Gets all the local variables */
 const figmaVariables = figma.variables.getLocalVariables();
 
-/* Iterates through variables to generate CSS & JS variables */
-figmaVariables
+/* Filters variables to only get COLOR & FLOAT resolved types sorted alphabetically */
+const filteredFigmaVariables = figmaVariables
   .filter(variable => variable.resolvedType === 'COLOR' || variable.resolvedType === 'FLOAT')
-  .sort((a, b) => a.name.localeCompare(b.name))
-  .map(variable => `  ${generatesCSSKeyString(variable)}: ${generatesCSSValueString(variable)};`)
-  .forEach(property => {
-    cssFile += property + '\n';
-    jsFile += cssPropertyToJSProperty(property) + '\n';
-  });
+  .sort((a, b) => a.name.localeCompare(b.name));
 
+/* Iterates through variables to generate CSS & JS variables */
+filteredFigmaVariables
+  .map(variable => `  ${generatesCSSKeyString(variable)}: ${generatesCSSValueString(variable)};`)
+  .forEach(variable => {
+    cssFile += variable + '\n';
+    jsFile += cssPropertyToJSConst(variable) + '\n';
+  });
 cssFile += '}';
 
+/* Iterates through variables to generate Compose variables */
+filteredFigmaVariables
+  .map(variable => `  val ${generatesComposeKeyString(variable)}: ${variable.resolvedType === 'COLOR' ? `Color = Color(${generatesComposeValueString(variable)})` : `Dp = ${generatesComposeValueString(variable)}`}`)
+  .forEach(variable => {
+    composeFile += variable + '\n';
+  });
+composeFile += '}';
+
 /* Sends to the UI the code generation */
-figma.ui.postMessage({ cssFile, jsFile });
+figma.ui.postMessage({ cssFile, jsFile, composeFile });
 
 /* Catches event when code copied to clipboard and notify the user */
 figma.ui.onmessage = message => {
   if (message.type === 'code-copied-css') {
-    figma.notify('CSS code successfully copied to clipboard')
+    figma.notify(`CSS variables successfully copied to clipboard`);
   }
   if (message.type === 'code-copied-js') {
-    figma.notify('JS code successfully copied to clipboard')
+    figma.notify('JavaScript variables successfully copied to clipboard')
+  }
+  if (message.type === 'code-copied-compose') {
+    figma.notify('Compose variables successfully copied to clipboard')
   }
 };
