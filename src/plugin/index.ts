@@ -48,7 +48,15 @@ function rgbaObjectToCSSHexaString(obj: { r: number, g: number, b: number, a: nu
 function rgbaObjectToComposeHexaString(obj: { r: number, g: number, b: number, a: number }): string {
   const { r, g, b, a } = obj;
   const rgbaString = rgba2hex(`rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`);
-  return `Ox${rgbaString.substring(7)}${rgbaString.substring(1, 7)}`
+  return `Color(Ox${rgbaString.substring(7)}${rgbaString.substring(1, 7)})`
+}
+
+/*
+** Converts a rgba JavaScript object to a SwiftUI hexa string
+*/
+function rgbaObjectToSwiftuiRgbaString(obj: { r: number, g: number, b: number, a: number }): string {
+  const { r, g, b, a } = obj;
+  return `Color(red: ${r.toFixed(2)}, green: ${g.toFixed(2)}, blue: ${b.toFixed(2)})${a !== 1 ? `.opacity(${a.toFixed(2)})` : ''}`;
 }
 
 /*
@@ -118,6 +126,9 @@ function generatesCSSValueString(variable: Variable): string {
   }
 };
 
+/*
+** Generates a Compose key string
+*/
 function generatesComposeKeyString(variable: Variable): string {
   const parts = variable.name.split('/');
   let transformedString = '';
@@ -131,6 +142,9 @@ function generatesComposeKeyString(variable: Variable): string {
   return transformedString;
 }
 
+/*
+** Generates a Compose value string
+*/
 function generatesComposeValueString(variable: Variable): string {
   const value: any = variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
 
@@ -141,6 +155,38 @@ function generatesComposeValueString(variable: Variable): string {
     return rgbaObjectToComposeHexaString(value);
   } else {
     return value + '.dp';
+  }
+}
+
+/*
+** Generates a SwiftUI key string
+*/
+function generatesSwiftuiKeyString(variable: Variable): string {
+  const parts = variable.name.split('/');
+  let transformedString = '';
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i].trim();
+    const capitalizedPart = part.charAt(0).toUpperCase() + part.slice(1);
+    transformedString += capitalizedPart;
+  }
+  
+  return transformedString;
+}
+
+/*
+** Generates a SwiftUI value string
+*/
+function generatesSwiftuiValueString(variable: Variable): string {
+  const value: any = variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
+
+  if (value.type === 'VARIABLE_ALIAS') {
+    const alias = <Variable> figmaVariables.find(obj => obj.id === value.id);
+    return `Constants.${generatesComposeKeyString(alias)}`;
+  } else if (variable.resolvedType === 'COLOR') {
+    return rgbaObjectToSwiftuiRgbaString(value);
+  } else {
+    return value;
   }
 }
 
@@ -157,6 +203,7 @@ figma.showUI(__html__);
 let cssFile = `:root {\n`;
 let jsFile = '';
 let composeFile = `object Variables {\n`;
+let swiftuiFile = `struct Constants {\n`;
 
 /* Gets all the local variables */
 const figmaVariables = figma.variables.getLocalVariables();
@@ -177,14 +224,22 @@ cssFile += '}';
 
 /* Iterates through variables to generate Compose variables */
 filteredFigmaVariables
-  .map(variable => `  val ${generatesComposeKeyString(variable)}: ${variable.resolvedType === 'COLOR' ? `Color = Color(${generatesComposeValueString(variable)})` : `Dp = ${generatesComposeValueString(variable)}`}`)
+  .map(variable => `  val ${generatesComposeKeyString(variable)}: ${variable.resolvedType === 'COLOR' ? 'Color' : 'Dp'} = ${generatesComposeValueString(variable)}`)
   .forEach(variable => {
     composeFile += variable + '\n';
   });
 composeFile += '}';
 
+/* Iterates through variables to generate Compose variables */
+filteredFigmaVariables
+  .map(variable => `  static let ${generatesSwiftuiKeyString(variable)}: ${variable.resolvedType === 'COLOR' ? 'Color' : 'CGFloat' } = ${generatesSwiftuiValueString(variable)}`)
+  .forEach(variable => {
+    swiftuiFile += variable + '\n';
+  });
+swiftuiFile += '}';
+
 /* Sends to the UI the code generation */
-figma.ui.postMessage({ cssFile, jsFile, composeFile });
+figma.ui.postMessage({ cssFile, jsFile, composeFile, swiftuiFile });
 
 /* Catches event when code copied to clipboard and notify the user */
 figma.ui.onmessage = message => {
@@ -196,5 +251,8 @@ figma.ui.onmessage = message => {
   }
   if (message.type === 'code-copied-compose') {
     figma.notify('Compose variables successfully copied to clipboard')
+  }
+  if (message.type === 'code-copied-swiftui') {
+    figma.notify('SwiftUI variables successfully copied to clipboard')
   }
 };
