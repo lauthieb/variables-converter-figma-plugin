@@ -1,18 +1,31 @@
 {
-  "name": "variables-to-css-custom-properties",
-  "version": "1.0.0",
-  "description": "Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables",
-  "main": "dist/plugin/index.js",
-  "scripts": {
-    "build": "shx rm -rf dist && shx mkdir dist && shx cp -R ./src/ui/ ./dist/ && tsc -p tsconfig.json",
-    "build:watch": "chokidar \"src\" -c \"npm run build\""
-  },
-  "author": "Laurent Thiebault",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@figma/plugin-typings": "^1.69.0",
-    "chokidar-cli": "^3.0.0",
-    "shx": "^0.3.4",
-    "typescript": "^5.1.6"
-  }
+	"name": "variables-to-css-custom-properties",
+	"version": "1.0.0",
+	"description": "Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables",
+	"main": "dist/plugin/index.js",
+	"scripts": {
+		"lint": "prettier . --write && eslint src/**/*.ts --fix",
+		"build": "shx rm -rf dist && shx mkdir dist && shx cp -R ./src/ui/ ./dist/ && tsc -p tsconfig.json",
+		"build:watch": "pnpm lint && pnpm build && chokidar \"src\" -c \"pnpm lint && pnpm build\"",
+		"prepare": "pnpx husky install"
+	},
+	"author": "Laurent Thiebault",
+	"license": "Apache-2.0",
+	"lint-staged": {
+		"**/*.{js,jsx,ts,tsx}": [
+			"pnpm lint"
+		]
+	},
+	"devDependencies": {
+		"@figma/plugin-typings": "^1.69.0",
+		"@typescript-eslint/eslint-plugin": "^6.0.0",
+		"@typescript-eslint/parser": "^6.0.0",
+		"chokidar-cli": "^3.0.0",
+		"eslint": "^8.45.0",
+		"eslint-config-prettier": "^8.8.0",
+		"husky": "^8.0.0",
+		"prettier": "^3.0.0",
+		"shx": "^0.3.4",
+		"typescript": "^5.1.6"
+	}
 }

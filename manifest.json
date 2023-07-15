@@ -1,19 +1,13 @@
 {
-  "name": "Variables Converter",
-  "id": "1256000104406722117",
-  "api": "1.0.0",
-  "main": "dist/plugin/index.js",
-  "capabilities": [
-    "inspect"
-  ],
-  "enableProposedApi": false,
-  "editorType": [
-    "dev"
-  ],
-  "ui": "dist/ui/index.html",
-  "networkAccess": {
-    "allowedDomains": [
-      "https://unpkg.com"
-    ]
-  }
+	"name": "Variables Converter",
+	"id": "1256000104406722117",
+	"api": "1.0.0",
+	"main": "dist/plugin/index.js",
+	"capabilities": ["inspect"],
+	"enableProposedApi": false,
+	"editorType": ["dev"],
+	"ui": "dist/ui/index.html",
+	"networkAccess": {
+		"allowedDomains": ["https://unpkg.com"]
+	}
 }

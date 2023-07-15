@@ -1,0 +1,26 @@
+{
+	"env": {
+		"browser": true,
+		"es2021": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"prettier",
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:@typescript-eslint/recommended"
+	],
+	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"ecmaVersion": "latest",
+		"sourceType": "module"
+	},
+	"plugins": ["@typescript-eslint"],
+	"rules": {
+		"indent": ["warn", "tab"],
+		"quotes": ["error", "single"],
+		"semi": ["error", "always"],
+		"@typescript-eslint/no-explicit-any": "off"
+	}
+}

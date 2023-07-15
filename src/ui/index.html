@@ -1,197 +1,288 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Variables Converterr</title>
-    <style>
-      body {
-        background-color: #222;
-      }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Variables Converterr</title>
+		<style>
+			body {
+				background-color: #222;
+			}
 
-      h2 {
-        font-family: sans-serif;
-        font-size: 13px;
-        margin: 0;
-        color: white;
-      }
+			h2 {
+				font-family: sans-serif;
+				font-size: 13px;
+				margin: 0;
+				color: white;
+			}
 
-      pre {
-        margin: 0;
-      }
+			pre {
+				margin: 0;
+			}
 
-      pre code pre {
-        margin: 0;
-        padding: 8px;
-        border-radius: 4px;
-        display: block;
-        width: auto;
-        overflow: auto;
-        scrollbar-color: red;
-        max-height: 24vh;
-      }
+			pre code pre {
+				margin: 0;
+				padding: 8px;
+				border-radius: 4px;
+				display: block;
+				width: auto;
+				overflow: auto;
+				scrollbar-color: red;
+				max-height: 24vh;
+			}
 
-      button {
-        height: 22px;
-        font-family: sans-serif;
-        font-size: 11px;
-        border-radius: 4px;
-        background-color: #303030;
-        color: white;
-        border: 1px solid lightgray;
-      }
+			button {
+				height: 22px;
+				font-family: sans-serif;
+				font-size: 11px;
+				border-radius: 4px;
+				background-color: #303030;
+				color: white;
+				border: 1px solid lightgray;
+			}
 
-      button:hover, button:active {
-        cursor: pointer;
-        color: black;
-        background: white;
-      }
+			button:hover,
+			button:active {
+				cursor: pointer;
+				color: black;
+				background: white;
+			}
 
-      .box-flex-center {
-        display: flex;
-        flex-direction: row;
-        justify-content: center; 
-        align-items: flex-end;
-      }
+			.box-flex-center {
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: flex-end;
+			}
 
-      .box-flex-center h2 {
-        margin-left: 4px;
-      }
+			.box-flex-center h2 {
+				margin-left: 4px;
+			}
 
-      .box-space-between {
-        display: flex; 
-        flex-direction: row; 
-        justify-content: space-between; 
-        align-items: flex-end;
-      }
-    </style>
-    <script src="https://unpkg.com/shiki"></script>
-    <script>
-      let cssCode;
-      let jsCode;
-      let composeCode;
-      let swiftuiCode;
+			.box-space-between {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				align-items: flex-end;
+			}
+		</style>
+		<script src="https://unpkg.com/shiki"></script>
+		<script>
+			let cssCode;
+			let jsCode;
+			let composeCode;
+			let swiftuiCode;
 
-      onmessage = (event) => {
-        shiki
-        .getHighlighter({
-          theme: 'nord',
-          langs: ['css'],
-        })
-        .then(highlighter => {
-          cssCode = event.data.pluginMessage.cssFile;
-          const code = highlighter.codeToHtml(cssCode, { lang: 'css' })
-          document.getElementById('css-file').innerHTML = code;
-        });
+			onmessage = (event) => {
+				shiki
+					.getHighlighter({
+						theme: 'nord',
+						langs: ['css'],
+					})
+					.then((highlighter) => {
+						cssCode = event.data.pluginMessage.cssFile;
+						const code = highlighter.codeToHtml(cssCode, { lang: 'css' });
+						document.getElementById('css-file').innerHTML = code;
+					});
 
-        shiki
-        .getHighlighter({
-          theme: 'nord',
-          langs: ['js'],
-        })
-        .then(highlighter => {
-          jsCode = event.data.pluginMessage.jsFile;
-          const code = highlighter.codeToHtml(jsCode, { lang: 'js' })
-          document.getElementById('js-file').innerHTML = code;
-        });
+				shiki
+					.getHighlighter({
+						theme: 'nord',
+						langs: ['js'],
+					})
+					.then((highlighter) => {
+						jsCode = event.data.pluginMessage.jsFile;
+						const code = highlighter.codeToHtml(jsCode, { lang: 'js' });
+						document.getElementById('js-file').innerHTML = code;
+					});
 
-        shiki
-        .getHighlighter({
-          theme: 'nord',
-          langs: ['kotlin'],
-        })
-        .then(highlighter => {
-          composeCode = event.data.pluginMessage.composeFile;
-          const code = highlighter.codeToHtml(composeCode, { lang: 'kotlin' })
-          document.getElementById('compose-file').innerHTML = code;
-        });
+				shiki
+					.getHighlighter({
+						theme: 'nord',
+						langs: ['kotlin'],
+					})
+					.then((highlighter) => {
+						composeCode = event.data.pluginMessage.composeFile;
+						const code = highlighter.codeToHtml(composeCode, {
+							lang: 'kotlin',
+						});
+						document.getElementById('compose-file').innerHTML = code;
+					});
 
-        shiki
-        .getHighlighter({
-          theme: 'nord',
-          langs: ['swift'],
-        })
-        .then(highlighter => {
-          swiftuiCode = event.data.pluginMessage.swiftuiFile;
-          const code = highlighter.codeToHtml(swiftuiCode, { lang: 'swift' })
-          document.getElementById('swiftui-file').innerHTML = code;
-        });
-      }
+				shiki
+					.getHighlighter({
+						theme: 'nord',
+						langs: ['swift'],
+					})
+					.then((highlighter) => {
+						swiftuiCode = event.data.pluginMessage.swiftuiFile;
+						const code = highlighter.codeToHtml(swiftuiCode, { lang: 'swift' });
+						document.getElementById('swiftui-file').innerHTML = code;
+					});
+			};
 
-      function copyCodeToClipboard(file) {
-        let code;
+			function copyCodeToClipboard(file) {
+				let code;
 
-        switch (file) {
-          case 'js-file':
-            code = jsCode;
-            break;
-          case 'css-file':
-            code = cssCode;
-            break;
-          case 'compose-file':
-            code = composeCode;
-            break;
-          case 'swiftui-file':
-            code = swiftuiCode;
-            break;
-        }
+				switch (file) {
+					case 'js-file':
+						code = jsCode;
+						break;
+					case 'css-file':
+						code = cssCode;
+						break;
+					case 'compose-file':
+						code = composeCode;
+						break;
+					case 'swiftui-file':
+						code = swiftuiCode;
+						break;
+				}
 
-        const tempTextarea = document.createElement("textarea");
-        tempTextarea.value = code;
-        document.body.appendChild(tempTextarea);
-        tempTextarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempTextarea);
+				const tempTextarea = document.createElement('textarea');
+				tempTextarea.value = code;
+				document.body.appendChild(tempTextarea);
+				tempTextarea.select();
+				document.execCommand('copy');
+				document.body.removeChild(tempTextarea);
 
-        const event = `code-copied-${file.split('-')[0]}`;
-        parent.postMessage({ eventName: event, pluginMessage: {type:event}}, '*');
-      }
-    </script>
-  </head>
-  <body>
-    <div class="box-space-between">
-      <div class="box-flex-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 362.734 512"><path d="m437.367 100.62-33.046 370.199L255.778 512l-148.134-41.123L74.633 100.62z" style="fill:#264de4" transform="translate(-74.633)"/><path d="m376.03 447.246 28.24-316.352H256v349.629z" style="fill:#2965f1" transform="translate(-74.633)"/><path d="m150.31 268.217 4.07 45.41H256v-45.41zM256 176.305H142.132l4.128 45.411H256zM256 433.399v-47.246l-.199.053-50.574-13.656-3.233-36.217h-45.585l6.362 71.301 93.02 25.823z" style="fill:#ebebeb" transform="translate(-74.633)"/><path d="M85.367 0h55v23h-32v23h32v23h-55zM151.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32zM217.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32z" fill="white" /><path d="m311.761 313.627-5.271 58.894-50.647 13.67v47.244l93.094-25.801.683-7.672 10.671-119.551 1.108-12.194 8.198-91.912H255.843v45.411h63.988l-4.132 46.501h-59.856v45.41z" style="fill:#fff" transform="translate(-74.633)"/></svg>
-        <h2>CSS variables</h2>
-      </div>
-      <button onclick="copyCodeToClipboard(('css-file'))">Copy to Clipboard</button>
-    </div>
-    <pre>
+				const event = `code-copied-${file.split('-')[0]}`;
+				parent.postMessage(
+					{ eventName: event, pluginMessage: { type: event } },
+					'*'
+				);
+			}
+		</script>
+	</head>
+	<body>
+		<div class="box-space-between">
+			<div class="box-flex-center">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					viewBox="0 0 362.734 512"
+				>
+					<path
+						d="m437.367 100.62-33.046 370.199L255.778 512l-148.134-41.123L74.633 100.62z"
+						style="fill: #264de4"
+						transform="translate(-74.633)"
+					/>
+					<path
+						d="m376.03 447.246 28.24-316.352H256v349.629z"
+						style="fill: #2965f1"
+						transform="translate(-74.633)"
+					/>
+					<path
+						d="m150.31 268.217 4.07 45.41H256v-45.41zM256 176.305H142.132l4.128 45.411H256zM256 433.399v-47.246l-.199.053-50.574-13.656-3.233-36.217h-45.585l6.362 71.301 93.02 25.823z"
+						style="fill: #ebebeb"
+						transform="translate(-74.633)"
+					/>
+					<path
+						d="M85.367 0h55v23h-32v23h32v23h-55zM151.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32zM217.367 0h55v20h-32v4h32v46h-55V49h32v-4h-32z"
+						fill="white"
+					/>
+					<path
+						d="m311.761 313.627-5.271 58.894-50.647 13.67v47.244l93.094-25.801.683-7.672 10.671-119.551 1.108-12.194 8.198-91.912H255.843v45.411h63.988l-4.132 46.501h-59.856v45.41z"
+						style="fill: #fff"
+						transform="translate(-74.633)"
+					/>
+				</svg>
+				<h2>CSS variables</h2>
+			</div>
+			<button onclick="copyCodeToClipboard(('css-file'))">
+				Copy to Clipboard
+			</button>
+		</div>
+		<pre>
       <code id="css-file"></code>
     </pre>
 
-    <div class="box-space-between">
-      <div class="box-flex-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 630 630"><path fill="#f7df1e" d="M0 0h630v630H0z"/><path d="M423.2 492.19c12.69 20.72 29.2 35.95 58.4 35.95 24.53 0 40.2-12.26 40.2-29.2 0-20.3-16.1-27.49-43.1-39.3l-14.8-6.35c-42.72-18.2-71.1-41-71.1-89.2 0-44.4 33.83-78.2 86.7-78.2 37.64 0 64.7 13.1 84.2 47.4l-46.1 29.6c-10.15-18.2-21.1-25.37-38.1-25.37-17.34 0-28.33 11-28.33 25.37 0 17.76 11 24.95 36.4 35.95l14.8 6.34c50.3 21.57 78.7 43.56 78.7 93 0 53.3-41.87 82.5-98.1 82.5-54.98 0-90.5-26.2-107.88-60.54zm-209.13 5.13c9.3 16.5 17.76 30.45 38.1 30.45 19.45 0 31.72-7.61 31.72-37.2v-201.3h59.2v202.1c0 61.3-35.94 89.2-88.4 89.2-47.4 0-74.85-24.53-88.81-54.075z"/></svg>
-        <h2>JavaScript variables</h2>
-      </div>
-      <button onclick="copyCodeToClipboard(('js-file'))">Copy to Clipboard</button>
-    </div>
-    <pre>
+		<div class="box-space-between">
+			<div class="box-flex-center">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					viewBox="0 0 630 630"
+				>
+					<path fill="#f7df1e" d="M0 0h630v630H0z" />
+					<path
+						d="M423.2 492.19c12.69 20.72 29.2 35.95 58.4 35.95 24.53 0 40.2-12.26 40.2-29.2 0-20.3-16.1-27.49-43.1-39.3l-14.8-6.35c-42.72-18.2-71.1-41-71.1-89.2 0-44.4 33.83-78.2 86.7-78.2 37.64 0 64.7 13.1 84.2 47.4l-46.1 29.6c-10.15-18.2-21.1-25.37-38.1-25.37-17.34 0-28.33 11-28.33 25.37 0 17.76 11 24.95 36.4 35.95l14.8 6.34c50.3 21.57 78.7 43.56 78.7 93 0 53.3-41.87 82.5-98.1 82.5-54.98 0-90.5-26.2-107.88-60.54zm-209.13 5.13c9.3 16.5 17.76 30.45 38.1 30.45 19.45 0 31.72-7.61 31.72-37.2v-201.3h59.2v202.1c0 61.3-35.94 89.2-88.4 89.2-47.4 0-74.85-24.53-88.81-54.075z"
+					/>
+				</svg>
+				<h2>JavaScript variables</h2>
+			</div>
+			<button onclick="copyCodeToClipboard(('js-file'))">
+				Copy to Clipboard
+			</button>
+		</div>
+		<pre>
       <code id="js-file"></code>
     </pre>
 
-    <div class="box-space-between">
-      <div class="box-flex-center">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" viewBox="-147 -70 294 345"><g fill="#a4c639"><use xlink:href="#a" stroke="#FFF" stroke-width="14.4"/><use xlink:href="#b" transform="scale(-1 1)"/><g id="b" stroke="#FFF" stroke-width="7.2"><rect width="13" height="86" x="14" y="-86" rx="6.5" transform="rotate(29)"/><rect id="c" width="48" height="133" x="-143" y="41" rx="24"/><use xlink:href="#c" x="85" y="97"/></g><g id="a"><ellipse cy="41" rx="91" ry="84"/><rect width="182" height="182" x="-91" y="20" rx="22"/></g></g><g fill="#FFF" stroke="#FFF" stroke-width="7.2"><path d="M-95 44.5H95"/><circle cx="-42" r="4"/><circle cx="42" r="4"/></g></svg>
-        <h2>Compose variables</h2>
-      </div>
-      <button onclick="copyCodeToClipboard(('compose-file'))">Copy to Clipboard</button>
-    </div>
-    <pre>
+		<div class="box-space-between">
+			<div class="box-flex-center">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					xmlns:xlink="http://www.w3.org/1999/xlink"
+					width="16"
+					viewBox="-147 -70 294 345"
+				>
+					<g fill="#a4c639">
+						<use xlink:href="#a" stroke="#FFF" stroke-width="14.4" />
+						<use xlink:href="#b" transform="scale(-1 1)" />
+						<g id="b" stroke="#FFF" stroke-width="7.2">
+							<rect
+								width="13"
+								height="86"
+								x="14"
+								y="-86"
+								rx="6.5"
+								transform="rotate(29)"
+							/>
+							<rect id="c" width="48" height="133" x="-143" y="41" rx="24" />
+							<use xlink:href="#c" x="85" y="97" />
+						</g>
+						<g id="a">
+							<ellipse cy="41" rx="91" ry="84" />
+							<rect width="182" height="182" x="-91" y="20" rx="22" />
+						</g>
+					</g>
+					<g fill="#FFF" stroke="#FFF" stroke-width="7.2">
+						<path d="M-95 44.5H95" />
+						<circle cx="-42" r="4" />
+						<circle cx="42" r="4" />
+					</g>
+				</svg>
+				<h2>Compose variables</h2>
+			</div>
+			<button onclick="copyCodeToClipboard(('compose-file'))">
+				Copy to Clipboard
+			</button>
+		</div>
+		<pre>
       <code id="compose-file"></code>
     </pre>
 
-    <div class="box-space-between">
-      <div class="box-flex-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 64 64"><path fill="#F05138" d="M59.387 16.45a82.463 82.463 0 0 0-.027-1.792c-.035-1.301-.112-2.614-.343-3.9-.234-1.307-.618-2.523-1.222-3.71a12.464 12.464 0 0 0-5.453-5.452C51.156.992 49.941.609 48.635.374c-1.288-.232-2.6-.308-3.902-.343a85.714 85.714 0 0 0-1.792-.027C42.23 0 41.52 0 40.813 0H18.578c-.71 0-1.419 0-2.128.004-.597.004-1.195.01-1.792.027-.325.009-.651.02-.978.036-.978.047-1.959.133-2.924.307-.98.176-1.908.436-2.811.81A12.503 12.503 0 0 0 3.89 3.89a12.46 12.46 0 0 0-2.294 3.158C.992 8.235.61 9.45.374 10.758c-.231 1.286-.308 2.599-.343 3.9a85.767 85.767 0 0 0-.027 1.792C-.001 17.16 0 17.869 0 18.578v22.235c0 .71 0 1.418.004 2.128.004.597.01 1.194.027 1.791.035 1.302.112 2.615.343 3.901.235 1.307.618 2.523 1.222 3.71a12.457 12.457 0 0 0 5.453 5.453c1.186.603 2.401.986 3.707 1.22 1.287.232 2.6.31 3.902.344.597.016 1.195.023 1.793.027.709.005 1.417.004 2.127.004h22.235c.709 0 1.418 0 2.128-.004.597-.004 1.194-.011 1.792-.027 1.302-.035 2.614-.112 3.902-.343 1.306-.235 2.521-.618 3.707-1.222a12.461 12.461 0 0 0 5.453-5.452c.604-1.187.987-2.403 1.222-3.71.231-1.286.308-2.6.343-3.9.016-.598.023-1.194.027-1.792.004-.71.004-1.419.004-2.129V18.578c0-.71 0-1.419-.004-2.128z"/><path fill="#FFF" d="m47.06 36.66-.004-.004c.066-.224.134-.446.191-.675 2.465-9.821-3.55-21.432-13.731-27.546 4.461 6.048 6.434 13.374 4.681 19.78-.156.571-.344 1.12-.552 1.653-.225-.148-.51-.316-.89-.527 0 0-10.127-6.252-21.103-17.312-.288-.29 5.852 8.777 12.822 16.14-3.284-1.843-12.434-8.5-18.227-13.802.712 1.187 1.558 2.33 2.489 3.43C17.573 23.932 23.882 31.5 31.44 37.314c-5.31 3.25-12.814 3.502-20.285.003a30.646 30.646 0 0 1-5.193-3.098c3.162 5.058 8.033 9.423 13.96 11.97 7.07 3.039 14.1 2.833 19.336.05l-.004.007c.024-.016.055-.032.08-.047.214-.116.428-.234.636-.358 2.516-1.306 7.485-2.63 10.152 2.559.654 1.27 2.041-5.46-3.061-11.74z"/></svg>
-        <h2>SwiftUI variables</h2>
-      </div>
-      <button onclick="copyCodeToClipboard(('swiftui-file'))">Copy to Clipboard</button>
-    </div>
-    <pre>
+		<div class="box-space-between">
+			<div class="box-flex-center">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 64 64">
+					<path
+						fill="#F05138"
+						d="M59.387 16.45a82.463 82.463 0 0 0-.027-1.792c-.035-1.301-.112-2.614-.343-3.9-.234-1.307-.618-2.523-1.222-3.71a12.464 12.464 0 0 0-5.453-5.452C51.156.992 49.941.609 48.635.374c-1.288-.232-2.6-.308-3.902-.343a85.714 85.714 0 0 0-1.792-.027C42.23 0 41.52 0 40.813 0H18.578c-.71 0-1.419 0-2.128.004-.597.004-1.195.01-1.792.027-.325.009-.651.02-.978.036-.978.047-1.959.133-2.924.307-.98.176-1.908.436-2.811.81A12.503 12.503 0 0 0 3.89 3.89a12.46 12.46 0 0 0-2.294 3.158C.992 8.235.61 9.45.374 10.758c-.231 1.286-.308 2.599-.343 3.9a85.767 85.767 0 0 0-.027 1.792C-.001 17.16 0 17.869 0 18.578v22.235c0 .71 0 1.418.004 2.128.004.597.01 1.194.027 1.791.035 1.302.112 2.615.343 3.901.235 1.307.618 2.523 1.222 3.71a12.457 12.457 0 0 0 5.453 5.453c1.186.603 2.401.986 3.707 1.22 1.287.232 2.6.31 3.902.344.597.016 1.195.023 1.793.027.709.005 1.417.004 2.127.004h22.235c.709 0 1.418 0 2.128-.004.597-.004 1.194-.011 1.792-.027 1.302-.035 2.614-.112 3.902-.343 1.306-.235 2.521-.618 3.707-1.222a12.461 12.461 0 0 0 5.453-5.452c.604-1.187.987-2.403 1.222-3.71.231-1.286.308-2.6.343-3.9.016-.598.023-1.194.027-1.792.004-.71.004-1.419.004-2.129V18.578c0-.71 0-1.419-.004-2.128z"
+					/>
+					<path
+						fill="#FFF"
+						d="m47.06 36.66-.004-.004c.066-.224.134-.446.191-.675 2.465-9.821-3.55-21.432-13.731-27.546 4.461 6.048 6.434 13.374 4.681 19.78-.156.571-.344 1.12-.552 1.653-.225-.148-.51-.316-.89-.527 0 0-10.127-6.252-21.103-17.312-.288-.29 5.852 8.777 12.822 16.14-3.284-1.843-12.434-8.5-18.227-13.802.712 1.187 1.558 2.33 2.489 3.43C17.573 23.932 23.882 31.5 31.44 37.314c-5.31 3.25-12.814 3.502-20.285.003a30.646 30.646 0 0 1-5.193-3.098c3.162 5.058 8.033 9.423 13.96 11.97 7.07 3.039 14.1 2.833 19.336.05l-.004.007c.024-.016.055-.032.08-.047.214-.116.428-.234.636-.358 2.516-1.306 7.485-2.63 10.152 2.559.654 1.27 2.041-5.46-3.061-11.74z"
+					/>
+				</svg>
+				<h2>SwiftUI variables</h2>
+			</div>
+			<button onclick="copyCodeToClipboard(('swiftui-file'))">
+				Copy to Clipboard
+			</button>
+		</div>
+		<pre>
       <code id="swiftui-file"></code>
     </pre>
-  </body>
+	</body>
 </html>
-  
