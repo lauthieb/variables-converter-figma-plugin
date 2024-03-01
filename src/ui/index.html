@@ -3,10 +3,11 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Variables Converterr</title>
+		<title>Variables Converter</title>
 		<style>
 			body {
 				background-color: #222;
+				font-family: Inter, sans-serif;
 			}
 
 			h2 {
@@ -48,6 +49,16 @@
 				background: white;
 			}
 
+			.options {
+				margin-bottom: 16px;
+			}
+
+			label {
+				color: white;
+				font-size: 13px;
+				line-height: 22px;
+			}
+
 			.box-flex-center {
 				display: flex;
 				flex-direction: row;
@@ -68,19 +79,65 @@
 		</style>
 		<script src="https://unpkg.com/shiki@0.14.7"></script>
 		<script>
+			/*
+			 ** =================
+			 ** Mode Select
+			 ** =================
+			 */
+
+			function updateModeOptions(options) {
+				const modeSelectElement = document.getElementById('mode-select');
+				const currentSelection = modeSelectElement.value;
+
+				const newOptionsHTML =
+					`<option value="">All</option>` +
+					options
+						.map((name) => `<option value="${name}">${name}</option>`)
+						.join('');
+				modeSelectElement.innerHTML = newOptionsHTML;
+
+				// restore previous selection (lost because of innerHTML change)
+				if (options.includes(currentSelection)) {
+					modeSelectElement.value = currentSelection;
+				}
+			}
+
+			// create mode select event handler
+			window.addEventListener('DOMContentLoaded', () => {
+				const selectOptions = document.getElementById('mode-select');
+				selectOptions.addEventListener('change', (event) => {
+					let mode = event.target.value;
+					if (mode === '') {
+						mode = null;
+					}
+					parent.postMessage(
+						{
+							eventName: 'mode-selected',
+							pluginMessage: { type: 'mode-selected', mode },
+						},
+						'*'
+					);
+				});
+			});
+
+			/*
+			 ** =================
+			 ** Code Areas
+			 ** =================
+			 */
+
 			let cssCode;
 			let jsCode;
 			let composeCode;
 			let swiftuiCode;
 
-			onmessage = (event) => {
+			function updateCodeAreas({ cssCode, jsCode, composeCode, swiftuiCode }) {
 				shiki
 					.getHighlighter({
 						theme: 'nord',
 						langs: ['css'],
 					})
 					.then((highlighter) => {
-						cssCode = event.data.pluginMessage.cssFile;
 						const code = highlighter.codeToHtml(cssCode, { lang: 'css' });
 						document.getElementById('css-file').innerHTML = code;
 					});
@@ -91,7 +148,6 @@
 						langs: ['js'],
 					})
 					.then((highlighter) => {
-						jsCode = event.data.pluginMessage.jsFile;
 						const code = highlighter.codeToHtml(jsCode, { lang: 'js' });
 						document.getElementById('js-file').innerHTML = code;
 					});
@@ -102,7 +158,6 @@
 						langs: ['kotlin'],
 					})
 					.then((highlighter) => {
-						composeCode = event.data.pluginMessage.composeFile;
 						const code = highlighter.codeToHtml(composeCode, {
 							lang: 'kotlin',
 						});
@@ -115,11 +170,10 @@
 						langs: ['swift'],
 					})
 					.then((highlighter) => {
-						swiftuiCode = event.data.pluginMessage.swiftuiFile;
 						const code = highlighter.codeToHtml(swiftuiCode, { lang: 'swift' });
 						document.getElementById('swiftui-file').innerHTML = code;
 					});
-			};
+			}
 
 			function copyCodeToClipboard(file) {
 				let code;
@@ -152,9 +206,29 @@
 					'*'
 				);
 			}
+
+			/*
+			 ** =================
+			 ** UI Update Requests
+			 ** =================
+			 */
+
+			onmessage = (event) => {
+				updateModeOptions(event.data.pluginMessage.modeNames);
+				updateCodeAreas({
+					cssCode: event.data.pluginMessage.cssFile,
+					jsCode: event.data.pluginMessage.jsFile,
+					composeCode: event.data.pluginMessage.composeFile,
+					swiftuiCode: event.data.pluginMessage.swiftuiFile,
+				});
+			};
 		</script>
 	</head>
 	<body>
+		<div class="options">
+			<label for="mode-select">Variable Mode: </label>
+			<select name="mode" id="mode-select"></select>
+		</div>
 		<div class="box-space-between">
 			<div class="box-flex-center">
 				<svg
