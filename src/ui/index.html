@@ -90,7 +90,7 @@
 				const currentSelection = modeSelectElement.value;
 
 				const newOptionsHTML =
-					`<option value="">All</option>` +
+					`<option value="">All Collections (Default Mode)</option>` +
 					options
 						.map((name) => `<option value="${name}">${name}</option>`)
 						.join('');
@@ -131,14 +131,17 @@
 			let composeCode;
 			let swiftuiCode;
 
-			function updateCodeAreas({ cssCode, jsCode, composeCode, swiftuiCode }) {
+			function updateCodeAreas(newCode) {
 				shiki
 					.getHighlighter({
 						theme: 'nord',
 						langs: ['css'],
 					})
 					.then((highlighter) => {
-						const code = highlighter.codeToHtml(cssCode, { lang: 'css' });
+						cssCode = newCode.cssCode;
+						const code = highlighter.codeToHtml(newCode.cssCode, {
+							lang: 'css',
+						});
 						document.getElementById('css-file').innerHTML = code;
 					});
 
@@ -148,7 +151,8 @@
 						langs: ['js'],
 					})
 					.then((highlighter) => {
-						const code = highlighter.codeToHtml(jsCode, { lang: 'js' });
+						jsCode = newCode.jsCode;
+						const code = highlighter.codeToHtml(newCode.jsCode, { lang: 'js' });
 						document.getElementById('js-file').innerHTML = code;
 					});
 
@@ -158,7 +162,8 @@
 						langs: ['kotlin'],
 					})
 					.then((highlighter) => {
-						const code = highlighter.codeToHtml(composeCode, {
+						composeCode = newCode.composeCode;
+						const code = highlighter.codeToHtml(newCode.composeCode, {
 							lang: 'kotlin',
 						});
 						document.getElementById('compose-file').innerHTML = code;
@@ -170,7 +175,10 @@
 						langs: ['swift'],
 					})
 					.then((highlighter) => {
-						const code = highlighter.codeToHtml(swiftuiCode, { lang: 'swift' });
+						swiftuiCode = newCode.swiftuiCode;
+						const code = highlighter.codeToHtml(newCode.swiftuiCode, {
+							lang: 'swift',
+						});
 						document.getElementById('swiftui-file').innerHTML = code;
 					});
 			}
