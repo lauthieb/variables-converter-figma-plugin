@@ -1,5 +1,5 @@
 {
-	"name": "variables-to-css-custom-properties",
+	"name": "variables-converter-figma-plugin",
 	"version": "1.0.0",
 	"description": "Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables",
 	"main": "dist/plugin/index.js",
