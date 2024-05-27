@@ -5,11 +5,19 @@
  */
 
 /* Gets all the local variables */
-const figmaVariables = figma.variables.getLocalVariables();
-const availableCollections = listAllCollections(figmaVariables);
-let selectedCollection: string = Object.keys(availableCollections)[0];
-let availableModes = modesOfCollection(selectedCollection);
-let selectedMode: string = Object.keys(availableModes)[0];
+let figmaVariables: Variable[] = [];
+let availableCollections: Record<string, string> = {};
+let selectedCollection: string;
+let availableModes: Record<string, string> = {};
+let selectedMode: string;
+
+async function initVariables(): Promise<void> {
+	figmaVariables = await figma.variables.getLocalVariablesAsync();
+	availableCollections = await listAllCollections(figmaVariables);
+	selectedCollection = Object.keys(availableCollections)[0];
+	availableModes = await modesOfCollection(selectedCollection);
+	selectedMode = Object.keys(availableModes)[0];
+}
 
 function variableByCurrentMode(variable: Variable): VariableValue {
 	if (selectedMode === null) {
@@ -18,19 +26,25 @@ function variableByCurrentMode(variable: Variable): VariableValue {
 	return variable.valuesByMode[selectedMode];
 }
 
-function listAllCollections(variables: Variable[]): Record<string, string> {
+async function listAllCollections(
+	variables: Variable[]
+): Promise<Record<string, string>> {
 	const collections: Record<string, string> = {};
-	variables.forEach((variable) => {
+	for (const variable of variables) {
 		const collectionId = variable.variableCollectionId;
-		const collection = figma.variables.getVariableCollectionById(collectionId);
+		const collection =
+			await figma.variables.getVariableCollectionByIdAsync(collectionId);
 		collections[collectionId] = collection?.name ?? collectionId;
-	});
+	}
 	return collections;
 }
 
-function modesOfCollection(collectionId: string): Record<string, string> {
+async function modesOfCollection(
+	collectionId: string
+): Promise<Record<string, string>> {
 	const modes: Record<string, string> = {};
-	const collection = figma.variables.getVariableCollectionById(collectionId);
+	const collection =
+		await figma.variables.getVariableCollectionByIdAsync(collectionId);
 	collection?.modes.forEach((mode) => {
 		modes[mode.modeId] = mode.name;
 	});
@@ -342,10 +356,15 @@ function postUiUpdate() {
 		modes: availableModes,
 	});
 }
-postUiUpdate();
+
+async function init() {
+	await initVariables();
+	postUiUpdate();
+}
+init();
 
 /* Handle ui events triggered from UI (index.html) */
-figma.ui.onmessage = (message) => {
+figma.ui.onmessage = async (message) => {
 	if (message.type === 'code-copied-css') {
 		figma.notify('CSS variables successfully copied to clipboard');
 	}
@@ -363,7 +382,7 @@ figma.ui.onmessage = (message) => {
 		if (selectedCollection === null) {
 			throw new Error('No collection selected');
 		}
-		availableModes = modesOfCollection(selectedCollection);
+		availableModes = await modesOfCollection(selectedCollection);
 		selectedMode = Object.keys(availableModes)[0];
 		postUiUpdate();
 	}
