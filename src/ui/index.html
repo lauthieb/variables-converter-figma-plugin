@@ -81,43 +81,48 @@
 		<script>
 			/*
 			 ** =================
-			 ** Mode Select
+			 ** Collection & Mode Select
 			 ** =================
 			 */
 
-			function updateModeOptions(options) {
-				const modeSelectElement = document.getElementById('mode-select');
-				const currentSelection = modeSelectElement.value;
+			function updateSelect(selectID, options) {
+				const selectElement = document.getElementById(selectID);
+				const currentSelection = selectElement.value;
 
-				const newOptionsHTML =
-					`<option value="">All Collections (Default Mode)</option>` +
-					options
-						.map((name) => `<option value="${name}">${name}</option>`)
-						.join('');
-				modeSelectElement.innerHTML = newOptionsHTML;
+				const newOptionsHTML = Object.entries(options)
+					.map(([id, name]) => `<option value="${id}">${name}</option>`)
+					.join('');
+				selectElement.innerHTML = newOptionsHTML;
 
 				// restore previous selection (lost because of innerHTML change)
-				if (options.includes(currentSelection)) {
-					modeSelectElement.value = currentSelection;
+				if (options[currentSelection] !== undefined) {
+					selectElement.value = currentSelection;
+				} else {
+					selectElement.value = Object.entries(options)[0][0];
 				}
 			}
 
-			// create mode select event handler
-			window.addEventListener('DOMContentLoaded', () => {
-				const selectOptions = document.getElementById('mode-select');
+			function setupSelectEventHandler(selectID, eventName) {
+				const selectOptions = document.getElementById(selectID);
 				selectOptions.addEventListener('change', (event) => {
-					let mode = event.target.value;
-					if (mode === '') {
-						mode = null;
+					let value = event.target.value;
+					if (value === '') {
+						value = null;
 					}
 					parent.postMessage(
 						{
-							eventName: 'mode-selected',
-							pluginMessage: { type: 'mode-selected', mode },
+							eventName,
+							pluginMessage: { type: eventName, value },
 						},
 						'*'
 					);
 				});
+			}
+
+			// create select event handler
+			window.addEventListener('DOMContentLoaded', () => {
+				setupSelectEventHandler('collection-select', 'collection-selected');
+				setupSelectEventHandler('mode-select', 'mode-selected');
 			});
 
 			/*
@@ -222,7 +227,8 @@
 			 */
 
 			onmessage = (event) => {
-				updateModeOptions(event.data.pluginMessage.modeNames);
+				updateSelect('collection-select', event.data.pluginMessage.collections);
+				updateSelect('mode-select', event.data.pluginMessage.modes);
 				updateCodeAreas({
 					cssCode: event.data.pluginMessage.cssFile,
 					jsCode: event.data.pluginMessage.jsFile,
@@ -234,8 +240,14 @@
 	</head>
 	<body>
 		<div class="options">
-			<label for="mode-select">Variable Mode: </label>
-			<select name="mode" id="mode-select"></select>
+			<div>
+				<label for="collection-select">Collection: </label>
+				<select name="collection" id="collection-select"></select>
+			</div>
+			<div>
+				<label for="mode-select">Mode: </label>
+				<select name="mode" id="mode-select"></select>
+			</div>
 		</div>
 		<div class="box-space-between">
 			<div class="box-flex-center">

@@ -6,50 +6,33 @@
 
 /* Gets all the local variables */
 const figmaVariables = figma.variables.getLocalVariables();
-const availableModes = getAllModes(figmaVariables);
-let selectedMode: string | null = null;
-
-function variableHasModeValue(
-	variable: Variable,
-	modeKey: string | null
-): boolean {
-	if (modeKey === null) {
-		return true;
-	}
-	// list of modeIDs from Set
-	const modeIDs = Array.from(availableModes[modeKey]);
-	return modeIDs.some((mode) => {
-		return variable.valuesByMode[mode] !== undefined;
-	});
-}
+const availableCollections = listAllCollections(figmaVariables);
+let selectedCollection: string = Object.keys(availableCollections)[0];
+let availableModes = modesOfCollection(selectedCollection);
+let selectedMode: string = Object.keys(availableModes)[0];
 
 function variableByCurrentMode(variable: Variable): VariableValue {
 	if (selectedMode === null) {
-		return variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
+		throw new Error('No mode selected');
 	}
-	const modeIDs = Array.from(availableModes[selectedMode]);
-	for (const modeID of modeIDs) {
-		const value = variable.valuesByMode[modeID];
-		if (value !== undefined) {
-			return value;
-		}
-	}
-	throw new Error(
-		`Variable ${variable.name} does not have a value for mode ${selectedMode}`
-	);
+	return variable.valuesByMode[selectedMode];
 }
 
-function getAllModes(variables: Variable[]): Record<string, Set<string>> {
-	const modes: Record<string, Set<string>> = {};
+function listAllCollections(variables: Variable[]): Record<string, string> {
+	const collections: Record<string, string> = {};
 	variables.forEach((variable) => {
 		const collectionId = variable.variableCollectionId;
 		const collection = figma.variables.getVariableCollectionById(collectionId);
-		collection?.modes.forEach((mode) => {
-			if (modes[mode.name] === undefined) {
-				modes[mode.name] = new Set();
-			}
-			modes[mode.name].add(mode.modeId);
-		});
+		collections[collectionId] = collection?.name ?? collectionId;
+	});
+	return collections;
+}
+
+function modesOfCollection(collectionId: string): Record<string, string> {
+	const modes: Record<string, string> = {};
+	const collection = figma.variables.getVariableCollectionById(collectionId);
+	collection?.modes.forEach((mode) => {
+		modes[mode.modeId] = mode.name;
 	});
 	return modes;
 }
@@ -71,8 +54,8 @@ function rgba2hex(orig: any) {
 		alpha = ((rgb && rgb[4]) || '').trim();
 	let hex = rgb
 		? (rgb[1] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[2] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[3] | (1 << 8)).toString(16).slice(1)
+			(rgb[2] | (1 << 8)).toString(16).slice(1) +
+			(rgb[3] | (1 << 8)).toString(16).slice(1)
 		: orig;
 
 	if (alpha !== '') {
@@ -296,9 +279,11 @@ function postUiUpdate() {
 	let composeFile = 'object Variables {\n';
 	let swiftuiFile = 'struct Constants {\n';
 
-	const variablesForCurrentMode = figmaVariables.filter((variable) =>
-		variableHasModeValue(variable, selectedMode)
-	);
+	const variablesForCurrentMode = figmaVariables
+		.filter((variable) => variable.variableCollectionId === selectedCollection)
+		.filter(
+			(variable) => variable.valuesByMode[selectedMode ?? ''] !== undefined
+		);
 	/* Filters variables to only get COLOR & FLOAT resolved types sorted alphabetically */
 	const filteredFigmaVariables = variablesForCurrentMode
 		.filter(
@@ -347,15 +332,14 @@ function postUiUpdate() {
 		});
 	swiftuiFile += '}';
 
-	const modeNames = Object.keys(availableModes);
-
 	/* Sends new data to UI (index.html) */
 	figma.ui.postMessage({
 		cssFile,
 		jsFile,
 		composeFile,
 		swiftuiFile,
-		modeNames,
+		collections: availableCollections,
+		modes: availableModes,
 	});
 }
 postUiUpdate();
@@ -374,8 +358,17 @@ figma.ui.onmessage = (message) => {
 	if (message.type === 'code-copied-swiftui') {
 		figma.notify('SwiftUI variables successfully copied to clipboard');
 	}
+	if (message.type === 'collection-selected') {
+		selectedCollection = message.value;
+		if (selectedCollection === null) {
+			throw new Error('No collection selected');
+		}
+		availableModes = modesOfCollection(selectedCollection);
+		selectedMode = Object.keys(availableModes)[0];
+		postUiUpdate();
+	}
 	if (message.type === 'mode-selected') {
-		selectedMode = message.mode;
+		selectedMode = message.value;
 		postUiUpdate();
 	}
 };
