@@ -15,8 +15,8 @@ function rgba2hex(orig: any) {
 		alpha = ((rgb && rgb[4]) || '').trim();
 	let hex = rgb
 		? (rgb[1] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[2] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[3] | (1 << 8)).toString(16).slice(1)
+			(rgb[2] | (1 << 8)).toString(16).slice(1) +
+			(rgb[3] | (1 << 8)).toString(16).slice(1)
 		: orig;
 
 	if (alpha !== '') {
@@ -53,6 +53,24 @@ function rgbaObjectToCSSHexaString(obj: {
  ** Utils - Converters
  ** =================
  */
+
+/*
+ ** Converts a rgba object to a Dart hexa string
+ */
+function rgbaObjectToDartHexaString(obj: {
+	r: number;
+	g: number;
+	b: number;
+	a: number;
+}): string {
+	const { r, g, b, a } = obj;
+	const rgbaString = rgba2hex(
+		`rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(
+			b * 255
+		)}, ${a})`
+	);
+	return `Color(0x${rgbaString.substring(7)}${rgbaString.substring(1, 7)})`;
+}
 
 /*
  ** Converts a rgba JavaScript object to a Compose hexa string
@@ -164,6 +182,27 @@ function generatesCSSValueString(variable: Variable): string {
 }
 
 /*
+ ** Generates a Dart key string
+ */
+function generatesDartKeyString(variable: Variable): string {
+	const camelCaseVariableName = variable.name
+		.toLowerCase()
+		.replace(/-(\w)/g, (_, letter) => letter.toUpperCase());
+
+	const parts = camelCaseVariableName.split('/');
+	let transformedString = '';
+
+	for (let i = 0; i < parts.length; i++) {
+		const part = parts[i].trim();
+		const capitalizedPart =
+			(i > 0 ? part.charAt(0).toUpperCase() : part.charAt(0)) + part.slice(1);
+		transformedString += capitalizedPart;
+	}
+
+	return transformedString;
+}
+
+/*
  ** Generates a Compose key string
  */
 function generatesComposeKeyString(variable: Variable): string {
@@ -177,6 +216,22 @@ function generatesComposeKeyString(variable: Variable): string {
 	}
 
 	return transformedString;
+}
+
+/*
+ ** Generates a Dart value string
+ */
+function generatesDartValueString(variable: Variable): string {
+	const value: any =
+		variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
+	if (value.type === 'VARIABLE_ALIAS') {
+		const alias = <Variable>figmaVariables.find((obj) => obj.id === value.id);
+		return `Variables.${generatesDartKeyString(alias)}`;
+	} else if (variable.resolvedType === 'COLOR') {
+		return rgbaObjectToDartHexaString(value);
+	} else {
+		return value;
+	}
 }
 
 /*
@@ -241,6 +296,7 @@ figma.showUI(__html__);
 /* Prepare variables for code generation */
 let cssFile = ':root {\n';
 let jsFile = '';
+let dartFile = 'class Variables {\n';
 let composeFile = 'object Variables {\n';
 let swiftuiFile = 'struct Constants {\n';
 
@@ -269,6 +325,16 @@ filteredFigmaVariables
 	});
 cssFile += '}';
 
+/* Iterates through variables to generate Dart variables */
+filteredFigmaVariables
+	.map((variable) => {
+		return `  static const ${generatesDartKeyString(variable)} = ${generatesDartValueString(variable)};`;
+	})
+	.forEach((variable) => {
+		dartFile += variable + '\n';
+	});
+dartFile += '}';
+
 /* Iterates through variables to generate Compose variables */
 filteredFigmaVariables
 	.map(
@@ -282,7 +348,7 @@ filteredFigmaVariables
 	});
 composeFile += '}';
 
-/* Iterates through variables to generate Compose variables */
+/* Iterates through variables to generate Swift UI variables */
 filteredFigmaVariables
 	.map(
 		(variable) =>
@@ -296,7 +362,7 @@ filteredFigmaVariables
 swiftuiFile += '}';
 
 /* Sends to the UI the code generation */
-figma.ui.postMessage({ cssFile, jsFile, composeFile, swiftuiFile });
+figma.ui.postMessage({ cssFile, jsFile, dartFile, composeFile, swiftuiFile });
 
 /* Catches event when code copied to clipboard and notify the user */
 figma.ui.onmessage = (message) => {
@@ -305,6 +371,9 @@ figma.ui.onmessage = (message) => {
 	}
 	if (message.type === 'code-copied-js') {
 		figma.notify('JavaScript variables successfully copied to clipboard');
+	}
+	if (message.type === 'code-copied-dart') {
+		figma.notify('Dart variables successfully copied to clipboard');
 	}
 	if (message.type === 'code-copied-compose') {
 		figma.notify('Compose variables successfully copied to clipboard');
