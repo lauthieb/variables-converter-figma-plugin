@@ -3,10 +3,11 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Variables Converterr</title>
+		<title>Variables Converter</title>
 		<style>
 			body {
 				background-color: #222;
+				font-family: Inter, sans-serif;
 			}
 
 			h2 {
@@ -48,6 +49,16 @@
 				background: white;
 			}
 
+			.options {
+				margin-bottom: 16px;
+			}
+
+			label {
+				color: white;
+				font-size: 13px;
+				line-height: 22px;
+			}
+
 			.box-flex-center {
 				display: flex;
 				flex-direction: row;
@@ -68,20 +79,74 @@
 		</style>
 		<script src="https://unpkg.com/shiki@0.14.7"></script>
 		<script>
+			/*
+			 ** =================
+			 ** Collection & Mode Select
+			 ** =================
+			 */
+
+			function updateSelect(selectID, options) {
+				const selectElement = document.getElementById(selectID);
+				const currentSelection = selectElement.value;
+
+				const newOptionsHTML = Object.entries(options)
+					.map(([id, name]) => `<option value="${id}">${name}</option>`)
+					.join('');
+				selectElement.innerHTML = newOptionsHTML;
+
+				// restore previous selection (lost because of innerHTML change)
+				if (options[currentSelection] !== undefined) {
+					selectElement.value = currentSelection;
+				} else {
+					selectElement.value = Object.entries(options)[0][0];
+				}
+			}
+
+			function setupSelectEventHandler(selectID, eventName) {
+				const selectOptions = document.getElementById(selectID);
+				selectOptions.addEventListener('change', (event) => {
+					let value = event.target.value;
+					if (value === '') {
+						value = null;
+					}
+					parent.postMessage(
+						{
+							eventName,
+							pluginMessage: { type: eventName, value },
+						},
+						'*'
+					);
+				});
+			}
+
+			// create select event handler
+			window.addEventListener('DOMContentLoaded', () => {
+				setupSelectEventHandler('collection-select', 'collection-selected');
+				setupSelectEventHandler('mode-select', 'mode-selected');
+			});
+
+			/*
+			 ** =================
+			 ** Code Areas
+			 ** =================
+			 */
+
 			let cssCode;
 			let jsCode;
 			let composeCode;
 			let swiftuiCode;
 
-			onmessage = (event) => {
+			function updateCodeAreas(newCode) {
 				shiki
 					.getHighlighter({
 						theme: 'nord',
 						langs: ['css'],
 					})
 					.then((highlighter) => {
-						cssCode = event.data.pluginMessage.cssFile;
-						const code = highlighter.codeToHtml(cssCode, { lang: 'css' });
+						cssCode = newCode.cssCode;
+						const code = highlighter.codeToHtml(newCode.cssCode, {
+							lang: 'css',
+						});
 						document.getElementById('css-file').innerHTML = code;
 					});
 
@@ -91,8 +156,8 @@
 						langs: ['js'],
 					})
 					.then((highlighter) => {
-						jsCode = event.data.pluginMessage.jsFile;
-						const code = highlighter.codeToHtml(jsCode, { lang: 'js' });
+						jsCode = newCode.jsCode;
+						const code = highlighter.codeToHtml(newCode.jsCode, { lang: 'js' });
 						document.getElementById('js-file').innerHTML = code;
 					});
 
@@ -102,8 +167,8 @@
 						langs: ['kotlin'],
 					})
 					.then((highlighter) => {
-						composeCode = event.data.pluginMessage.composeFile;
-						const code = highlighter.codeToHtml(composeCode, {
+						composeCode = newCode.composeCode;
+						const code = highlighter.codeToHtml(newCode.composeCode, {
 							lang: 'kotlin',
 						});
 						document.getElementById('compose-file').innerHTML = code;
@@ -115,11 +180,13 @@
 						langs: ['swift'],
 					})
 					.then((highlighter) => {
-						swiftuiCode = event.data.pluginMessage.swiftuiFile;
-						const code = highlighter.codeToHtml(swiftuiCode, { lang: 'swift' });
+						swiftuiCode = newCode.swiftuiCode;
+						const code = highlighter.codeToHtml(newCode.swiftuiCode, {
+							lang: 'swift',
+						});
 						document.getElementById('swiftui-file').innerHTML = code;
 					});
-			};
+			}
 
 			function copyCodeToClipboard(file) {
 				let code;
@@ -152,9 +219,36 @@
 					'*'
 				);
 			}
+
+			/*
+			 ** =================
+			 ** UI Update Requests
+			 ** =================
+			 */
+
+			onmessage = (event) => {
+				updateSelect('collection-select', event.data.pluginMessage.collections);
+				updateSelect('mode-select', event.data.pluginMessage.modes);
+				updateCodeAreas({
+					cssCode: event.data.pluginMessage.cssFile,
+					jsCode: event.data.pluginMessage.jsFile,
+					composeCode: event.data.pluginMessage.composeFile,
+					swiftuiCode: event.data.pluginMessage.swiftuiFile,
+				});
+			};
 		</script>
 	</head>
 	<body>
+		<div class="options">
+			<div>
+				<label for="collection-select">Collection: </label>
+				<select name="collection" id="collection-select"></select>
+			</div>
+			<div>
+				<label for="mode-select">Mode: </label>
+				<select name="mode" id="mode-select"></select>
+			</div>
+		</div>
 		<div class="box-space-between">
 			<div class="box-flex-center">
 				<svg

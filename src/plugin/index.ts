@@ -1,5 +1,58 @@
 /*
  ** =================
+ ** Utils - Variable Access
+ ** =================
+ */
+
+/* Gets all the local variables */
+let figmaVariables: Variable[] = [];
+let availableCollections: Record<string, string> = {};
+let selectedCollection: string;
+let availableModes: Record<string, string> = {};
+let selectedMode: string;
+
+async function initVariables(): Promise<void> {
+	figmaVariables = await figma.variables.getLocalVariablesAsync();
+	availableCollections = await listAllCollections(figmaVariables);
+	selectedCollection = Object.keys(availableCollections)[0];
+	availableModes = await modesOfCollection(selectedCollection);
+	selectedMode = Object.keys(availableModes)[0];
+}
+
+function variableByCurrentMode(variable: Variable): VariableValue {
+	if (selectedMode === null) {
+		throw new Error('No mode selected');
+	}
+	return variable.valuesByMode[selectedMode];
+}
+
+async function listAllCollections(
+	variables: Variable[]
+): Promise<Record<string, string>> {
+	const collections: Record<string, string> = {};
+	for (const variable of variables) {
+		const collectionId = variable.variableCollectionId;
+		const collection =
+			await figma.variables.getVariableCollectionByIdAsync(collectionId);
+		collections[collectionId] = collection?.name ?? collectionId;
+	}
+	return collections;
+}
+
+async function modesOfCollection(
+	collectionId: string
+): Promise<Record<string, string>> {
+	const modes: Record<string, string> = {};
+	const collection =
+		await figma.variables.getVariableCollectionByIdAsync(collectionId);
+	collection?.modes.forEach((mode) => {
+		modes[mode.modeId] = mode.name;
+	});
+	return modes;
+}
+
+/*
+ ** =================
  ** Utils - Maths
  ** =================
  */
@@ -15,8 +68,8 @@ function rgba2hex(orig: any) {
 		alpha = ((rgb && rgb[4]) || '').trim();
 	let hex = rgb
 		? (rgb[1] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[2] | (1 << 8)).toString(16).slice(1) +
-		  (rgb[3] | (1 << 8)).toString(16).slice(1)
+			(rgb[2] | (1 << 8)).toString(16).slice(1) +
+			(rgb[3] | (1 << 8)).toString(16).slice(1)
 		: orig;
 
 	if (alpha !== '') {
@@ -150,8 +203,7 @@ function generatesCSSKeyString(variable: Variable): string {
  ** Generates a CSS value string
  */
 function generatesCSSValueString(variable: Variable): string {
-	const value: any =
-		variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
+	const value: any = variableByCurrentMode(variable);
 
 	if (value.type === 'VARIABLE_ALIAS') {
 		const alias = <Variable>figmaVariables.find((obj) => obj.id === value.id);
@@ -183,9 +235,7 @@ function generatesComposeKeyString(variable: Variable): string {
  ** Generates a Compose value string
  */
 function generatesComposeValueString(variable: Variable): string {
-	const value: any =
-		variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
-
+	const value: any = variableByCurrentMode(variable);
 	if (value.type === 'VARIABLE_ALIAS') {
 		const alias = <Variable>figmaVariables.find((obj) => obj.id === value.id);
 		return `Variables.${generatesComposeKeyString(alias)}`;
@@ -216,9 +266,7 @@ function generatesSwiftuiKeyString(variable: Variable): string {
  ** Generates a SwiftUI value string
  */
 function generatesSwiftuiValueString(variable: Variable): string {
-	const value: any =
-		variable.valuesByMode[Object.keys(variable.valuesByMode)[0]];
-
+	const value: any = variableByCurrentMode(variable);
 	if (value.type === 'VARIABLE_ALIAS') {
 		const alias = <Variable>figmaVariables.find((obj) => obj.id === value.id);
 		return `Constants.${generatesComposeKeyString(alias)}`;
@@ -238,68 +286,85 @@ function generatesSwiftuiValueString(variable: Variable): string {
 /* Shows the Figma UI in the sidebar */
 figma.showUI(__html__);
 
-/* Prepare variables for code generation */
-let cssFile = ':root {\n';
-let jsFile = '';
-let composeFile = 'object Variables {\n';
-let swiftuiFile = 'struct Constants {\n';
+function postUiUpdate() {
+	/* Prepare variables for code generation */
+	let cssFile = ':root {\n';
+	let jsFile = '';
+	let composeFile = 'object Variables {\n';
+	let swiftuiFile = 'struct Constants {\n';
 
-/* Gets all the local variables */
-const figmaVariables = figma.variables.getLocalVariables();
+	const variablesForCurrentMode = figmaVariables
+		.filter((variable) => variable.variableCollectionId === selectedCollection)
+		.filter(
+			(variable) => variable.valuesByMode[selectedMode ?? ''] !== undefined
+		);
+	/* Filters variables to only get COLOR & FLOAT resolved types sorted alphabetically */
+	const filteredFigmaVariables = variablesForCurrentMode
+		.filter(
+			(variable) =>
+				variable.resolvedType === 'COLOR' || variable.resolvedType === 'FLOAT'
+		)
+		.sort((a, b) => a.name.localeCompare(b.name));
 
-/* Filters variables to only get COLOR & FLOAT resolved types sorted alphabetically */
-const filteredFigmaVariables = figmaVariables
-	.filter(
-		(variable) =>
-			variable.resolvedType === 'COLOR' || variable.resolvedType === 'FLOAT'
-	)
-	.sort((a, b) => a.name.localeCompare(b.name));
+	/* Iterates through variables to generate CSS & JS variables */
+	filteredFigmaVariables
+		.map(
+			(variable) =>
+				`  ${generatesCSSKeyString(variable)}: ${generatesCSSValueString(
+					variable
+				)};`
+		)
+		.forEach((variable) => {
+			cssFile += variable + '\n';
+			jsFile += cssPropertyToJSConst(variable) + '\n';
+		});
+	cssFile += '}';
 
-/* Iterates through variables to generate CSS & JS variables */
-filteredFigmaVariables
-	.map(
-		(variable) =>
-			`  ${generatesCSSKeyString(variable)}: ${generatesCSSValueString(
-				variable
-			)};`
-	)
-	.forEach((variable) => {
-		cssFile += variable + '\n';
-		jsFile += cssPropertyToJSConst(variable) + '\n';
+	/* Iterates through variables to generate Compose variables */
+	filteredFigmaVariables
+		.map(
+			(variable) =>
+				`  val ${generatesComposeKeyString(variable)}: ${
+					variable.resolvedType === 'COLOR' ? 'Color' : 'Dp'
+				} = ${generatesComposeValueString(variable)}`
+		)
+		.forEach((variable) => {
+			composeFile += variable + '\n';
+		});
+	composeFile += '}';
+
+	/* Iterates through variables to generate Compose variables */
+	filteredFigmaVariables
+		.map(
+			(variable) =>
+				`  static let ${generatesSwiftuiKeyString(variable)}: ${
+					variable.resolvedType === 'COLOR' ? 'Color' : 'CGFloat'
+				} = ${generatesSwiftuiValueString(variable)}`
+		)
+		.forEach((variable) => {
+			swiftuiFile += variable + '\n';
+		});
+	swiftuiFile += '}';
+
+	/* Sends new data to UI (index.html) */
+	figma.ui.postMessage({
+		cssFile,
+		jsFile,
+		composeFile,
+		swiftuiFile,
+		collections: availableCollections,
+		modes: availableModes,
 	});
-cssFile += '}';
+}
 
-/* Iterates through variables to generate Compose variables */
-filteredFigmaVariables
-	.map(
-		(variable) =>
-			`  val ${generatesComposeKeyString(variable)}: ${
-				variable.resolvedType === 'COLOR' ? 'Color' : 'Dp'
-			} = ${generatesComposeValueString(variable)}`
-	)
-	.forEach((variable) => {
-		composeFile += variable + '\n';
-	});
-composeFile += '}';
+async function init() {
+	await initVariables();
+	postUiUpdate();
+}
+init();
 
-/* Iterates through variables to generate Compose variables */
-filteredFigmaVariables
-	.map(
-		(variable) =>
-			`  static let ${generatesSwiftuiKeyString(variable)}: ${
-				variable.resolvedType === 'COLOR' ? 'Color' : 'CGFloat'
-			} = ${generatesSwiftuiValueString(variable)}`
-	)
-	.forEach((variable) => {
-		swiftuiFile += variable + '\n';
-	});
-swiftuiFile += '}';
-
-/* Sends to the UI the code generation */
-figma.ui.postMessage({ cssFile, jsFile, composeFile, swiftuiFile });
-
-/* Catches event when code copied to clipboard and notify the user */
-figma.ui.onmessage = (message) => {
+/* Handle ui events triggered from UI (index.html) */
+figma.ui.onmessage = async (message) => {
 	if (message.type === 'code-copied-css') {
 		figma.notify('CSS variables successfully copied to clipboard');
 	}
@@ -311,5 +376,18 @@ figma.ui.onmessage = (message) => {
 	}
 	if (message.type === 'code-copied-swiftui') {
 		figma.notify('SwiftUI variables successfully copied to clipboard');
+	}
+	if (message.type === 'collection-selected') {
+		selectedCollection = message.value;
+		if (selectedCollection === null) {
+			throw new Error('No collection selected');
+		}
+		availableModes = await modesOfCollection(selectedCollection);
+		selectedMode = Object.keys(availableModes)[0];
+		postUiUpdate();
+	}
+	if (message.type === 'mode-selected') {
+		selectedMode = message.value;
+		postUiUpdate();
 	}
 };
