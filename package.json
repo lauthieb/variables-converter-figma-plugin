@@ -1,7 +1,7 @@
 {
 	"name": "variables-converter-figma-plugin",
 	"version": "1.0.0",
-	"description": "Figma Plugin that generates CSS Custom Properties & JS variables from your Figma variables",
+	"description": "Figma Plugin that generates CSS Custom Properties, JavaScript variables, Compose variables & SwiftUI variables from your Figma variables",
 	"main": "dist/plugin/index.js",
 	"scripts": {
 		"lint": "prettier . --write && eslint src/**/*.ts --fix",
@@ -17,15 +17,18 @@
 		]
 	},
 	"devDependencies": {
-		"@figma/plugin-typings": "^1.69.0",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
+		"@eslint/eslintrc": "^3.1.0",
+		"@eslint/js": "^9.9.0",
+		"@figma/plugin-typings": "^1.98.0",
+		"@typescript-eslint/eslint-plugin": "^8.2.0",
+		"@typescript-eslint/parser": "^8.2.0",
 		"chokidar-cli": "^3.0.0",
-		"eslint": "^8.45.0",
-		"eslint-config-prettier": "^8.8.0",
-		"husky": "^8.0.0",
-		"prettier": "^3.0.0",
+		"eslint": "^9.9.0",
+		"eslint-config-prettier": "^9.1.0",
+		"globals": "^15.9.0",
+		"husky": "^9.1.5",
+		"prettier": "^3.3.3",
 		"shx": "^0.3.4",
-		"typescript": "^5.1.6"
+		"typescript": "^5.5.4"
 	}
 }

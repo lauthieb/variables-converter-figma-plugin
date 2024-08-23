@@ -8,7 +8,7 @@ To try this plugin in production, just [go to its Figma Community page](https://
 
 ## Install
 
-Below are the steps to get your plugin running. You can also find instructions at: https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+Below are the steps to get your plugin running. You can also find instructions at: https://www.figma.com/plugin-docs/plugin-quickstart-guide/x
 
 This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
 
