@@ -36,7 +36,7 @@ Then, go to Figma, open a design file, activate the "Dev Mode", go to "Plugins" 
 To build the plugin for production, just launch:
 
 ```sh
-npm run build:watch
+npm run build
 ```
 
 ## Recommended configuration
