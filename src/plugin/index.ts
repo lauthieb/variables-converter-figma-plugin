@@ -122,7 +122,7 @@ function rgbaObjectToComposeHexaString(obj: {
 			b * 255
 		)}, ${a})`
 	);
-	return `Color(Ox${rgbaString.substring(7)}${rgbaString.substring(1, 7)})`;
+	return `Color(0x${rgbaString.substring(7)}${rgbaString.substring(1, 7)})`;
 }
 
 /*
@@ -219,7 +219,7 @@ function generatesCSSValueString(variable: Variable): string {
  ** Generates a Compose key string
  */
 function generatesComposeKeyString(variable: Variable): string {
-	const parts = variable.name.split('/');
+	const parts = variable.name.split(/[\s/]+/);
 	let transformedString = '';
 
 	for (let i = 0; i < parts.length; i++) {
@@ -269,7 +269,7 @@ function generatesSwiftuiValueString(variable: Variable): string {
 	const value: any = variableByCurrentMode(variable);
 	if (value.type === 'VARIABLE_ALIAS') {
 		const alias = <Variable>figmaVariables.find((obj) => obj.id === value.id);
-		return `Constants.${generatesComposeKeyString(alias)}`;
+		return `Constants.${generatesSwiftuiKeyString(alias)}`;
 	} else if (variable.resolvedType === 'COLOR') {
 		return rgbaObjectToSwiftuiRgbaString(value);
 	} else {
@@ -333,7 +333,7 @@ function postUiUpdate() {
 		});
 	composeFile += '}';
 
-	/* Iterates through variables to generate Compose variables */
+	/* Iterates through variables to generate SwiftUI variables */
 	filteredFigmaVariables
 		.map(
 			(variable) =>
